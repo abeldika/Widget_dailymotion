@@ -1,4 +1,4 @@
-class dailymotionWidget extends Widget {
+class DailymotionWidget extends Widget {
 	
 	constructor(id, app) {
 		super(id, DailymotionModel, DailymotionView, DailymotionController, app);
@@ -27,6 +27,8 @@ class DailymotionModel extends WidgetModel {
 	
 	constructor() {
 		super();
+
+		this.url = ["htpps://www.Dailymotion.com/search?q={0}"] ;
 	}
 	
 	setUp() {
@@ -49,24 +51,20 @@ class DailymotionView extends WidgetView {
 
 	draw() {
 		super.draw();
-		this.link = HH.create("a");
-		SS.style(this.link, {"fontSize": "10px", "textDecoration": "none"});
-		this.stage.appendChild(this.link);
-		
-		this.try.footer.innerHTML = "test of Daily Search";
-		SS.style(this.try.footer, {"userSelect": "none", "cursor": "pointer"});
-		Events.on(this.try.footer, "click", event => this.mvc.controller.socketClick());
-		this.try.stage.appendChild(this.try.footer);
-	}
-	
-	update(title, link) {
-		this.link.innerHTML = title;
-		HH.attr(this.link, {"href": "http://www.dailymotion.com" + link, "target": "_blank"});
+		this.try = HH.create("input");
+		this.try.searchBar.setAttribute("type", "text");
+        this.try.searchBar.setAttribute("placeholder", "Rechercher...");
+		SS.style(this.searchBar, {"width": "85%", "border-radius": "10px", "padding": "2px", "margin": "5px"});
+		Events.on(this.try.searchBar, "keydown", event => this.try.mvc.controller.keyDownSearchBar(event));
+        this.try.stage.appendChild(this.try.searchBar);
+
+        this.try.autocompletionResults = HH.create("div");
+        this.try.stage.appendChild(this.try.autocompletionResults);
 	}
 	
 }
 
-class LeMondeController extends WidgetController {
+class DAilymotionController extends WidgetController {
 	
 	constructor() {
 		super();
@@ -77,22 +75,43 @@ class LeMondeController extends WidgetController {
 		
 	}
 	
-	onMessage(data) {
-		trace("received socket msg", data);
+	async keyDownSearchBar(e) {
+
+		
+		await this.try.getAutocompletionResults(this.try.mvc.view.searchBar.value);
+
+		if(e.keyCode == 13) //Si on appuie sur entrer...
+			this.try.openTabsResults(this.try.mvc.view.searchBar.value);
+
+	}
+
+	openTabsResults(result) {
+		for(let i = 0; i < this.try.mvc.model.url.length; i++) {
+			window.open(this.try.mvc.model.url[i].replace("{0}", result), '_blank');
+		}
 	}
 	
-	socketClick(event) {
-		trace("Test soket");
-		SocketIO.send("msg", {test: "message"});
+	async getAutocompletionResults(search) {
+		let json = await this.mvc.main.dom("https://api.dailymotion.com/api/suggest/?q=" + search + "&client=opensearch&lang=fr_fr");
+		let jsonParsed = JSON.parse(atob(json.response.dom));
+		let results = [];
+
+		for(let i = 0; i < jsonParsed[1].length; i++) {
+			let div = document.createElement("div"), text = document.createElement("p");
+
+			div.style.cursor = "pointer";
+			div.style.paddingLeft = "5px";
+			div.style.paddingRight = "5px";
+			text.innerText = jsonParsed[1][i];
+			div.appendChild(text);
+
+			div.addEventListener("click", event => { this.try.openTabsResults(jsonParsed[1][i]) });
+			results.push(div);
+		}
+
+		this.try.mvc.view.autocompletionResults.innerHTML = "";
+		for(let i = 0; i < results.length; i++) {
+			this.try.mvc.view.autocompletionResults.appendChild(results[i]);
+		}
 	}
-	
-	async load() {
-		let result = await this.mvc.main.dom("http://www.dailymotion.com/videos "); // load web page
-		let domstr = _atob(result.response.dom); // decode result
-		let parser = new DOMParser(); // init dom parser
-		let dom = parser.parseFromString(domstr, "text/html"); // inject result
-		let search = new xph().doc(dom).ctx(dom).craft('//*[@id="search"]').firstResult; // find interesting things
-		this.mvc.view.update(article.textContent, article.getAttribute("href"));
-	}
-	
 }
