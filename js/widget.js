@@ -61,6 +61,34 @@ class DailymotionView extends WidgetView {
         this.try.autocompletionResults = HH.create("div");
         this.try.stage.appendChild(this.try.autocompletionResults);
 	}
+
+	//* integration de l'api  du player Dailymotion et le parametre permettant de jouer la prochaine video
+
+
+	var player = DM.player(document.getElementById('player'), {
+		video: 'xwr14q'
+	});
+
+	var handleAPIReponse = function(response) {
+		var videos = response.list;
+		var player = DM.player(document.getElementById('player'),{
+
+		});
+
+		player.addEventListener('end',function (e)
+
+		{
+			var nextvideo = videos.shift();
+			if(nextvideo){
+				e.target.load(nextvideo.id);
+
+
+			}
+
+		});
+		});
+	}
+
 	
 }
 
