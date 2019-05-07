@@ -11,9 +11,18 @@ class Main {
 	}
 	
 	load() {
-		let widget = new DailymotionWidget(1, this);
-		document.body.appendChild(widget.mvc.view.stage);
+		this.loadWidget(DailymotionWidget)
 	}
+
+
+        loadWidget(classRef) {
+		let widget = new classRef(++this._id, this);
+		document.body.appendChild(widget.mvc.view.stage);
+		trace("new widget", widget.name);
+		this._widgets.set(widget.name, widget);
+	}
+
+
 	
 	async get(url) {
 		return await Comm.urlrequest("https://node.nicopr.fr/" + this._name + url, {});
