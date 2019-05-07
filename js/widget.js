@@ -62,10 +62,10 @@ class DailymotionView extends WidgetView {
         this.try.stage.appendChild(this.try.autocompletionResults);
 	}
 
-	//* integration de l'api  du player Dailymotion et le parametre permettant de jouer la prochaine video
 
 
-	var player = DM.player(document.getElementById('player'), {
+	DM.player () {
+		var player = DM.player(document.getElementById('player'), {
 		video: 'xwr14q'
 	});
 
@@ -88,6 +88,7 @@ class DailymotionView extends WidgetView {
 		});
 		});
 	}
+}
 
 	
 }
